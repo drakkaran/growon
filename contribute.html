@@ -45,18 +45,32 @@
     .hub-info { background: var(--sage-light); border-radius: var(--radius); padding: 14px 16px; font-size: 13px; color: var(--sage); line-height: 1.6; }
 
     .photo-upload {
+      display: block;
       border: 2px dashed var(--sage-mid);
       border-radius: var(--radius-lg);
-      padding: 32px;
+      padding: 32px 24px;
       text-align: center;
       cursor: pointer;
       color: var(--muted);
       font-size: 14px;
-      transition: background 0.15s;
+      line-height: 1.5;
+      transition: background 0.15s, border-color 0.15s;
+      user-select: none;
+      -webkit-user-select: none;
     }
-    .photo-upload:hover { background: var(--sage-light); }
-    .photo-upload .up-icon { font-size: 32px; margin-bottom: 10px; }
-    .photo-upload input   { display: none; }
+    .photo-upload:hover,
+    .photo-upload:focus-within { background: var(--sage-light); border-color: var(--sage); }
+    .photo-upload .up-icon { display: block; font-size: 32px; margin-bottom: 10px; }
+    /* Pull input fully out of layout so it never affects the label size */
+    .photo-upload input[type="file"] {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+    }
 
     .hidden { display: none; }
   </style>
@@ -190,15 +204,18 @@
   <!-- Photo upload -->
   <div class="form-section">
     <div class="form-section-title">Photo (optional but recommended)</div>
-    <label class="photo-upload" for="photo-input">
-      <div class="up-icon">📷</div>
-      <p>Tap to take a photo or upload from your camera roll</p>
-      <p style="font-size:12px;margin-top:6px">JPG or PNG · Max 5MB</p>
+    <label class="photo-upload" for="photo-input" style="position:relative">
+      <span class="up-icon">📷</span>
+      <span style="display:block">Tap to take a photo or upload from your camera roll</span>
+      <span style="display:block;font-size:12px;margin-top:6px;color:var(--muted)">JPG or PNG · Max 5MB</span>
       <input type="file" id="photo-input" accept="image/jpeg,image/png" onchange="handlePhoto(this)">
     </label>
     <div id="photo-preview" style="display:none;margin-top:12px;text-align:center">
-      <img id="photo-img" style="max-height:160px;border-radius:var(--radius);border:1px solid var(--border)">
-      <button class="btn btn-sm btn-outline" style="margin-top:8px" onclick="clearPhoto()">Remove photo</button>
+      <img id="photo-img" style="display:block;max-width:100%;max-height:200px;border-radius:var(--radius);border:1px solid var(--border);margin:0 auto;transition:opacity 0.2s">
+      <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-top:10px">
+        <span id="photo-size-label" style="font-size:12px;color:var(--muted)"></span>
+        <button class="btn btn-sm btn-outline" onclick="clearPhoto()">Remove photo</button>
+      </div>
     </div>
   </div>
 

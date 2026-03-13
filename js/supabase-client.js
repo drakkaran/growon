@@ -11,8 +11,8 @@
  *       It is included in <head> on every page to guarantee this.
  */
 
-const SUPABASE_URL  = 'https://YOUR_PROJECT_ID.supabase.co';
-const SUPABASE_ANON = 'YOUR_ANON_KEY';
+const SUPABASE_URL  = 'https://uiygynwdzlvmtkledfpg.supabase.co';
+const SUPABASE_ANON = 'sb_publishable_GS7cNvoOdQQAar1Kz5pkkQ_8EQthPNq';
 
 // Guard: fail with a clear message if the CDN bundle didn't load
 if (typeof supabase === 'undefined') {

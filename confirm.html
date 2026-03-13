@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confirming your account — GrowOn</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .confirm-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 48px 40px;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .icon-circle {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      margin: 0 auto 24px;
+    }
+    .icon-circle.loading { background: var(--warm); animation: pulse 1.4s ease-in-out infinite; }
+    .icon-circle.success { background: var(--sage-light); }
+    .icon-circle.error   { background: #fce4ec; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.5; }
+    }
+
+    .confirm-card h2 { margin-bottom: 10px; }
+    .confirm-card p  { color: var(--muted); font-size: 14px; line-height: 1.6; margin-bottom: 28px; }
+
+    .logo-top {
+      font-family: 'DM Serif Display', serif;
+      font-size: 22px;
+      color: var(--sage);
+      text-decoration: none;
+      margin-bottom: 40px;
+      display: block;
+    }
+    .logo-top span { color: var(--clay); }
+  </style>
+  <!-- Supabase must load before any app scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+
+  <a class="logo-top" href="index.html">Grow<span>On</span></a>
+
+  <div class="confirm-card" id="confirm-card">
+    <div class="icon-circle loading" id="icon">⏳</div>
+    <h2 id="heading">Confirming your email…</h2>
+    <p id="message">Just a moment while we verify your account.</p>
+    <div id="action"></div>
+  </div>
+
+<script src="js/supabase-client.js" defer></script>
+<script defer>
+document.addEventListener('DOMContentLoaded', async function () {
+
+  const icon    = document.getElementById('icon');
+  const heading = document.getElementById('heading');
+  const message = document.getElementById('message');
+  const action  = document.getElementById('action');
+
+  function showSuccess() {
+    icon.className    = 'icon-circle success';
+    icon.textContent  = '✓';
+    heading.textContent = 'Email confirmed!';
+    message.textContent = 'Your GrowOn account is ready. You can now browse and claim items.';
+    action.innerHTML  = `
+      <a class="btn btn-sage btn-full" href="dashboard.html">Go to my account →</a>
+      <a href="browse.html" style="display:block;margin-top:12px;font-size:13px;color:var(--muted);text-decoration:none">
+        Or browse the collection first
+      </a>`;
+  }
+
+  function showError(msg) {
+    icon.className    = 'icon-circle error';
+    icon.textContent  = '✕';
+    heading.textContent = 'Something went wrong';
+    message.textContent = msg || 'This confirmation link may have expired or already been used.';
+    action.innerHTML  = `
+      <a class="btn btn-sage btn-full" href="login.html">Back to sign in</a>
+      <a href="index.html" style="display:block;margin-top:12px;font-size:13px;color:var(--muted);text-decoration:none">
+        Return to home
+      </a>`;
+  }
+
+  try {
+    // Supabase appends tokens as a URL hash fragment, e.g.:
+    //   confirm.html#access_token=xxx&refresh_token=yyy&type=signup
+    // We parse the hash and let the client exchange it for a session.
+    const hash   = window.location.hash.substring(1); // strip the leading #
+    const params = new URLSearchParams(hash);
+    const type   = params.get('type');            // 'signup' or 'recovery'
+    const accessToken  = params.get('access_token');
+    const refreshToken = params.get('refresh_token');
+
+    if (!accessToken) {
+      // No token in hash — maybe they landed here directly
+      showError('No confirmation token found. Please use the link from your email.');
+      return;
+    }
+
+    // Exchange the tokens — this sets the session in localStorage
+    const { data, error } = await db.auth.setSession({
+      access_token:  accessToken,
+      refresh_token: refreshToken,
+    });
+
+    if (error) throw error;
+
+    // Clear the tokens from the URL bar (tidy + security)
+    history.replaceState(null, '', window.location.pathname);
+
+    showSuccess();
+
+  } catch (err) {
+    console.error('Confirmation error:', err);
+    showError(err.message || 'Verification failed.');
+  }
+});
+</script>
+</body>
+</html>

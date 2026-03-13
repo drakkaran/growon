@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contribute an Item — GrowOn</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .contribute-wrap { max-width: 660px; margin: 0 auto; padding: 36px 24px 60px; }
+    .contribute-wrap > h2 { margin-bottom: 6px; }
+    .contribute-wrap > .sub { color: var(--muted); font-size: 14px; margin-bottom: 32px; }
+
+    .form-section { background: white; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 26px; margin-bottom: 16px; }
+    .form-section-title { font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--sage); margin-bottom: 18px; }
+
+    .condition-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .condition-option {
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .condition-option:hover        { border-color: var(--sage-mid); }
+    .condition-option.selected     { border-color: var(--sage); background: var(--sage-light); }
+    .condition-option .c-emoji     { font-size: 22px; margin-bottom: 5px; }
+    .condition-option .c-label     { font-size: 13px; font-weight: 600; }
+    .condition-option .c-desc      { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+    .points-preview {
+      background: var(--sage-light);
+      border: 1px solid var(--sage-mid);
+      border-radius: var(--radius-lg);
+      padding: 22px 26px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .points-preview .num { font-family: 'DM Serif Display', serif; font-size: 42px; color: var(--sage); line-height: 1; }
+    .points-preview .label { font-size: 14px; font-weight: 500; color: var(--sage); }
+    .points-preview .note  { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+    .hub-info { background: var(--sage-light); border-radius: var(--radius); padding: 14px 16px; font-size: 13px; color: var(--sage); line-height: 1.6; }
+
+    .photo-upload {
+      border: 2px dashed var(--sage-mid);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      text-align: center;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 14px;
+      transition: background 0.15s;
+    }
+    .photo-upload:hover { background: var(--sage-light); }
+    .photo-upload .up-icon { font-size: 32px; margin-bottom: 10px; }
+    .photo-upload input   { display: none; }
+
+    .hidden { display: none; }
+  </style>
+  <!-- Supabase must load before any app scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="index.html">Grow<span>On</span></a>
+  <div class="nav-links">
+    <a class="nav-btn ghost"  href="browse.html">Browse</a>
+    <a class="nav-btn active" href="contribute.html">Contribute</a>
+    <a class="nav-btn ghost hidden" id="nav-account" href="dashboard.html">My Account</a>
+    <a class="nav-btn ghost hidden" id="nav-signout" href="#">Sign out</a>
+    <a class="nav-btn primary" id="nav-signin" href="login.html">Join Free</a>
+  </div>
+</nav>
+
+<div class="contribute-wrap">
+  <h2>Contribute an Item</h2>
+  <p class="sub">Fill in the details below. Our volunteers confirm condition on arrival and finalise your points.</p>
+
+  <!-- Item details -->
+  <div class="form-section">
+    <div class="form-section-title">Item details</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="category">Category</label>
+        <select class="form-input" id="category" onchange="calcPoints()">
+          <option>Tops</option>
+          <option>Bottoms</option>
+          <option>Outerwear</option>
+          <option>Swimwear</option>
+          <option>Footwear</option>
+          <option>School uniform</option>
+          <option>Sleepwear</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="gender">Gender</label>
+        <select class="form-input" id="gender">
+          <option>Girls</option>
+          <option>Boys</option>
+          <option>Unisex</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="size_group">Size group</label>
+        <select class="form-input" id="size_group" onchange="calcPoints()">
+          <option value="newborn">000–00 (Newborn)</option>
+          <option value="0-1">0–1 (3–12 months)</option>
+          <option value="2-3">2–3 (1–3 years)</option>
+          <option value="4-5">4–5 (4–5 years)</option>
+          <option value="6-8">6–8 (5–8 years)</option>
+          <option value="10-14">10–14 (9–14 years)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="season">Season</label>
+        <select class="form-input" id="season">
+          <option>All-season</option>
+          <option>Summer</option>
+          <option>Winter</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="material">Material</label>
+        <select class="form-input" id="material" onchange="calcPoints()">
+          <option value="cotton-synthetic">Cotton / Synthetic blend</option>
+          <option value="cotton">100% Cotton</option>
+          <option value="merino">Merino wool</option>
+          <option value="organic-cotton">Organic cotton</option>
+          <option value="synthetic">Polyester / Nylon</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="brand">Brand (optional)</label>
+        <input class="form-input" type="text" id="brand" placeholder="e.g. Bonds, Country Road" oninput="calcPoints()">
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="title">Item name / description</label>
+      <input class="form-input" type="text" id="title" placeholder="e.g. Navy zip-up hoodie, Floral summer dress">
+    </div>
+    <div class="form-group">
+      <label for="emoji">Item emoji (pick the closest)</label>
+      <select class="form-input" id="emoji">
+        <option value="👕">👕 T-shirt / Top</option>
+        <option value="👗">👗 Dress</option>
+        <option value="👖">👖 Jeans / Pants</option>
+        <option value="🩳">🩳 Shorts</option>
+        <option value="🧥">🧥 Jacket / Coat</option>
+        <option value="🧶">🧶 Jumper / Knit</option>
+        <option value="👟">👟 Sneakers</option>
+        <option value="👞">👞 School shoes</option>
+        <option value="🩱">🩱 Swimwear</option>
+        <option value="🎽">🎽 Sports / Uniform</option>
+        <option value="🧤">🧤 Accessories / Set</option>
+        <option value="🧣">🧣 Sleepwear / Onesie</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Condition -->
+  <div class="form-section">
+    <div class="form-section-title">Condition</div>
+    <div class="condition-grid">
+      <div class="condition-option selected" onclick="selectCondition(this, 'excellent')" id="cond-excellent">
+        <div class="c-emoji">✨</div>
+        <div class="c-label">Excellent</div>
+        <div class="c-desc">Like new, no visible wear</div>
+      </div>
+      <div class="condition-option" onclick="selectCondition(this, 'good')" id="cond-good">
+        <div class="c-emoji">👕</div>
+        <div class="c-label">Good</div>
+        <div class="c-desc">Minor wear, clean &amp; wearable</div>
+      </div>
+      <div class="condition-option" onclick="selectCondition(this, 'fair')" id="cond-fair">
+        <div class="c-emoji">🔄</div>
+        <div class="c-label">Fair</div>
+        <div class="c-desc">Visible wear, fully functional</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Photo upload -->
+  <div class="form-section">
+    <div class="form-section-title">Photo (optional but recommended)</div>
+    <label class="photo-upload" for="photo-input">
+      <div class="up-icon">📷</div>
+      <p>Tap to take a photo or upload from your camera roll</p>
+      <p style="font-size:12px;margin-top:6px">JPG or PNG · Max 5MB</p>
+      <input type="file" id="photo-input" accept="image/jpeg,image/png" onchange="handlePhoto(this)">
+    </label>
+    <div id="photo-preview" style="display:none;margin-top:12px;text-align:center">
+      <img id="photo-img" style="max-height:160px;border-radius:var(--radius);border:1px solid var(--border)">
+      <button class="btn btn-sm btn-outline" style="margin-top:8px" onclick="clearPhoto()">Remove photo</button>
+    </div>
+  </div>
+
+  <!-- Drop-off -->
+  <div class="form-section">
+    <div class="form-section-title">Drop-off details</div>
+    <div class="form-group">
+      <label for="suburb">Your suburb</label>
+      <input class="form-input" type="text" id="suburb" placeholder="e.g. New Farm, Paddington, West End">
+    </div>
+    <div class="hub-info">
+      📍 <strong>Current drop-off hub:</strong> New Farm Community Centre, 1003 Brunswick St, New Farm.<br>
+      Open <strong>Saturday 9am–12pm</strong>. Bring items clean, folded, and in a bag or box.
+    </div>
+  </div>
+
+  <!-- Points preview -->
+  <div class="points-preview">
+    <div>
+      <div class="label">Estimated points you'll earn</div>
+      <div class="num" id="pts-preview">17</div>
+    </div>
+    <div style="text-align:right">
+      <div class="note">Based on size, condition &amp; material</div>
+      <div class="note">Final amount confirmed by volunteer</div>
+    </div>
+  </div>
+
+  <button class="btn btn-sage btn-full btn-lg" id="submit-btn" onclick="handleSubmit()">Submit Item</button>
+</div>
+
+<script src="js/supabase-client.js" defer></script>
+<script src="js/ui.js" defer></script>
+
+<script src="js/page-contribute.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Browse Items — GrowOn</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .browse-header {
+      background: white;
+      border-bottom: 1px solid var(--border);
+      padding: 22px 24px;
+      position: sticky;
+      top: 58px;
+      z-index: 90;
+    }
+    .browse-header h2 { font-family: 'DM Serif Display', serif; font-size: 20px; margin-bottom: 14px; }
+    .filter-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .filter-chip {
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      background: white;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .filter-chip:hover     { border-color: var(--sage); color: var(--sage); }
+    .filter-chip.active    { background: var(--sage-light); border-color: var(--sage); color: var(--sage); font-weight: 500; }
+    .filter-select {
+      padding: 7px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      background: white;
+      color: var(--ink);
+      cursor: pointer;
+    }
+    .filter-divider { width: 1px; height: 22px; background: var(--border); flex-shrink: 0; }
+
+    .items-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+      padding: 24px;
+    }
+    .item-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .item-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.07); }
+    .item-img {
+      height: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .item-emoji { font-size: 52px; }
+    .item-img .pill {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+    }
+    .item-info { padding: 14px; }
+    .item-info h4   { font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .item-meta { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+    .item-points { display: flex; align-items: center; justify-content: space-between; }
+
+    .empty-state { text-align: center; padding: 80px 24px; color: var(--muted); }
+    .empty-state .big { font-size: 48px; margin-bottom: 16px; }
+
+    /* Claim modal specifics */
+    .claim-modal-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 14px; }
+    .claim-modal-row span:first-child { color: var(--muted); }
+    .claim-modal-total { border-top: 1px solid var(--border); padding-top: 14px; font-weight: 600; }
+    .item-preview-box { display: flex; gap: 14px; align-items: center; background: var(--cream); border-radius: var(--radius); padding: 14px; margin-bottom: 18px; }
+
+    .hidden { display: none; }
+  </style>
+  <!-- Supabase must load before any app scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="index.html">Grow<span>On</span></a>
+  <div class="nav-links">
+    <a class="nav-btn active" href="browse.html">Browse</a>
+    <a class="nav-btn ghost" href="contribute.html">Contribute</a>
+    <a class="nav-btn ghost hidden" id="nav-account" href="dashboard.html">My Account</a>
+    <a class="nav-btn ghost hidden" id="nav-signout" href="#">Sign out</a>
+    <a class="nav-btn primary" id="nav-signin" href="login.html">Join Free</a>
+  </div>
+</nav>
+
+<!-- Filters -->
+<div class="browse-header">
+  <h2>Browse Items</h2>
+  <div class="filter-row">
+    <!-- Gender chips -->
+    <button class="filter-chip active" data-filter="gender" data-value="all"   onclick="setGender(this,'all')">All</button>
+    <button class="filter-chip"        data-filter="gender" data-value="Girls" onclick="setGender(this,'Girls')">Girls</button>
+    <button class="filter-chip"        data-filter="gender" data-value="Boys"  onclick="setGender(this,'Boys')">Boys</button>
+    <button class="filter-chip"        data-filter="gender" data-value="Unisex"onclick="setGender(this,'Unisex')">Unisex</button>
+    <div class="filter-divider"></div>
+    <!-- Size -->
+    <select class="filter-select" id="filter-size" onchange="applyFilters()">
+      <option value="">All sizes</option>
+      <option value="newborn">000–00 Newborn</option>
+      <option value="0-1">0–1 (3–12 months)</option>
+      <option value="2-3">2–3 (1–3 years)</option>
+      <option value="4-5">4–5 (4–5 years)</option>
+      <option value="6-8">6–8 (5–8 years)</option>
+      <option value="10-14">10–14 (9–14 years)</option>
+    </select>
+    <!-- Category -->
+    <select class="filter-select" id="filter-cat" onchange="applyFilters()">
+      <option value="">All categories</option>
+      <option>Tops</option>
+      <option>Bottoms</option>
+      <option>Outerwear</option>
+      <option>Swimwear</option>
+      <option>Footwear</option>
+      <option>School uniform</option>
+      <option>Sleepwear</option>
+    </select>
+    <!-- Condition -->
+    <select class="filter-select" id="filter-cond" onchange="applyFilters()">
+      <option value="">Any condition</option>
+      <option value="excellent">Excellent</option>
+      <option value="good">Good</option>
+      <option value="fair">Fair</option>
+    </select>
+  </div>
+</div>
+
+<!-- Item grid -->
+<div class="items-grid" id="items-grid">
+  <!-- Skeleton placeholders -->
+  <div class="item-card"><div class="item-img skeleton" style="height:160px"></div><div class="item-info"><div class="skeleton" style="height:14px;margin-bottom:8px;border-radius:4px"></div><div class="skeleton" style="height:12px;width:70%;border-radius:4px"></div></div></div>
+  <div class="item-card"><div class="item-img skeleton" style="height:160px"></div><div class="item-info"><div class="skeleton" style="height:14px;margin-bottom:8px;border-radius:4px"></div><div class="skeleton" style="height:12px;width:60%;border-radius:4px"></div></div></div>
+  <div class="item-card"><div class="item-img skeleton" style="height:160px"></div><div class="item-info"><div class="skeleton" style="height:14px;margin-bottom:8px;border-radius:4px"></div><div class="skeleton" style="height:12px;width:80%;border-radius:4px"></div></div></div>
+</div>
+
+<!-- Claim modal -->
+<div class="modal-overlay" id="claim-modal">
+  <div class="modal">
+    <h3 style="margin-bottom:6px">Claim this item</h3>
+    <p style="color:var(--muted);font-size:14px;margin-bottom:18px">Points will be deducted from your balance and the item reserved for you.</p>
+    <div class="item-preview-box">
+      <span id="modal-emoji" style="font-size:38px"></span>
+      <div>
+        <strong id="modal-title"></strong>
+        <div style="font-size:13px;color:var(--muted);margin-top:2px" id="modal-meta"></div>
+      </div>
+    </div>
+    <div class="claim-modal-row"><span>Your balance</span><span id="modal-balance-before">— pts</span></div>
+    <div class="claim-modal-row"><span>Item cost</span><span id="modal-pts" style="color:var(--clay);font-weight:600"></span></div>
+    <div class="claim-modal-row claim-modal-total"><span>Balance after claim</span><span id="modal-balance-after"></span></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal('claim-modal')">Cancel</button>
+      <button class="modal-confirm" onclick="confirmClaim()">Confirm claim</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/supabase-client.js" defer></script>
+<script src="js/ui.js" defer></script>
+
+<script src="js/page-browse.js" defer></script>
+</body>
+</html>

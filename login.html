@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In — GrowOn</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body { display: flex; flex-direction: column; min-height: 100vh; }
+    .auth-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      margin-top: 8px;
+    }
+    .tab-row { display: flex; gap: 0; margin-bottom: 24px; border-bottom: 1px solid var(--border); }
+    .tab-btn {
+      flex: 1;
+      padding: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      font-family: 'DM Sans', sans-serif;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted);
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: color 0.15s;
+    }
+    .tab-btn.active { color: var(--sage); border-bottom-color: var(--sage); }
+    .form-panel { display: none; }
+    .form-panel.active { display: block; }
+    .hidden { display: none; }
+  </style>
+  <!-- Supabase must load before any app scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="index.html">Grow<span>On</span></a>
+  <div class="nav-links">
+    <a class="nav-btn ghost" href="browse.html">Browse</a>
+  </div>
+</nav>
+
+<div class="auth-container">
+  <h2>Welcome to GrowOn</h2>
+  <p class="sub">Join Brisbane's kids clothes exchange — it's free.</p>
+
+  <div class="auth-card">
+    <div class="tab-row">
+      <button class="tab-btn active" id="tab-signin" onclick="switchTab('signin')">Sign in</button>
+      <button class="tab-btn"        id="tab-signup" onclick="switchTab('signup')">Create account</button>
+    </div>
+
+    <!-- Sign in -->
+    <div class="form-panel active" id="panel-signin">
+      <div class="form-group">
+        <label for="si-email">Email</label>
+        <input class="form-input" type="email" id="si-email" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label for="si-password">Password</label>
+        <input class="form-input" type="password" id="si-password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="btn btn-sage btn-full" id="si-btn" onclick="handleSignIn()" style="margin-top:8px">Sign in</button>
+      <p style="text-align:center;font-size:13px;color:var(--muted);margin-top:14px">
+        <a href="#" style="color:var(--sage)">Forgot password?</a>
+      </p>
+    </div>
+
+    <!-- Sign up -->
+    <div class="form-panel" id="panel-signup">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="su-first">First name</label>
+          <input class="form-input" type="text" id="su-first" placeholder="Alex" autocomplete="given-name">
+        </div>
+        <div class="form-group">
+          <label for="su-last">Last name</label>
+          <input class="form-input" type="text" id="su-last" placeholder="Taylor" autocomplete="family-name">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="su-email">Email</label>
+        <input class="form-input" type="email" id="su-email" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label for="su-suburb">Suburb</label>
+        <input class="form-input" type="text" id="su-suburb" placeholder="e.g. New Farm, Paddington">
+      </div>
+      <div class="form-group">
+        <label for="su-password">Password</label>
+        <input class="form-input" type="password" id="su-password" placeholder="Min 8 characters" autocomplete="new-password">
+      </div>
+      <button class="btn btn-sage btn-full" id="su-btn" onclick="handleSignUp()" style="margin-top:8px">Create account</button>
+      <p style="font-size:12px;color:var(--muted);text-align:center;margin-top:12px;line-height:1.5">
+        By joining you agree to our community guidelines: only contribute clean, wearable items.
+      </p>
+    </div>
+  </div>
+</div>
+
+<script src="js/supabase-client.js" defer></script>
+<script src="js/ui.js" defer></script>
+
+<script src="js/page-login.js" defer></script>
+</body>
+</html>

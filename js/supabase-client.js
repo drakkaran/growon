@@ -37,7 +37,17 @@ async function getUser() {
 }
 
 async function signUp(email, password, meta = {}) {
-  return db.auth.signUp({ email, password, options: { data: meta } });
+  // Build the confirmation redirect URL dynamically so it works on both
+  // localhost (dev) and the live GitHub Pages URL without any config change.
+  const confirmUrl = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/') + 'confirm.html';
+  return db.auth.signUp({
+    email,
+    password,
+    options: {
+      data: meta,
+      emailRedirectTo: confirmUrl,
+    },
+  });
 }
 
 async function signIn(email, password) {

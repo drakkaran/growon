@@ -27,21 +27,108 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('pts-preview').textContent = pts;
   };
 
+  // ── Image compression using canvas ─────────────────────────────────────────
+  // Resizes to max 1200px on the longest edge, then steps JPEG quality down
+  // until the blob fits under TARGET_BYTES. Always outputs JPEG.
+  const TARGET_BYTES = 900 * 1024; // 900 KB — comfortable margin under 1 MB
+  const MAX_DIMENSION = 1200;
+
+  async function compressImage(file) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(file);
+
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+
+        // Scale down preserving aspect ratio
+        let { width, height } = img;
+        if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+          if (width >= height) {
+            height = Math.round((height / width) * MAX_DIMENSION);
+            width  = MAX_DIMENSION;
+          } else {
+            width  = Math.round((width / height) * MAX_DIMENSION);
+            height = MAX_DIMENSION;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width  = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+
+        // White background so transparent PNGs don't go black
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Step quality down until under TARGET_BYTES (min quality 0.4)
+        const tryQuality = (quality) => {
+          canvas.toBlob(blob => {
+            if (!blob) { reject(new Error('Canvas toBlob failed')); return; }
+            if (blob.size <= TARGET_BYTES || quality <= 0.4) {
+              resolve(blob);
+            } else {
+              tryQuality(Math.round((quality - 0.1) * 10) / 10);
+            }
+          }, 'image/jpeg', quality);
+        };
+
+        tryQuality(0.85);
+      };
+
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error('Could not load image'));
+      };
+
+      img.src = objectUrl;
+    });
+  }
+
+  // Holds the compressed Blob so handleSubmit can upload it directly
+  let compressedBlob = null;
+
   // ── Photo handlers — called from onchange/onclick in HTML
-  window.handlePhoto = function (input) {
+  window.handlePhoto = async function (input) {
     const file = input.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-      document.getElementById('photo-img').src = e.target.result;
-      document.getElementById('photo-preview').style.display = 'block';
-    };
-    reader.readAsDataURL(file);
+
+    const preview    = document.getElementById('photo-preview');
+    const photoImg   = document.getElementById('photo-img');
+    const sizeLabel  = document.getElementById('photo-size-label');
+
+    // Show a loading state while compressing
+    preview.style.display  = 'block';
+    photoImg.style.opacity = '0.4';
+    if (sizeLabel) sizeLabel.textContent = 'Compressing…';
+
+    try {
+      compressedBlob = await compressImage(file);
+
+      const dataUrl = await new Promise(res => {
+        const reader = new FileReader();
+        reader.onload = e => res(e.target.result);
+        reader.readAsDataURL(compressedBlob);
+      });
+
+      photoImg.src = dataUrl;
+      photoImg.style.opacity = '1';
+
+      const kb = Math.round(compressedBlob.size / 1024);
+      if (sizeLabel) sizeLabel.textContent = `${kb} KB`;
+    } catch (err) {
+      compressedBlob = null;
+      preview.style.display = 'none';
+      showToast('Could not process image — please try another file');
+    }
   };
 
   window.clearPhoto = function () {
     document.getElementById('photo-input').value = '';
     document.getElementById('photo-preview').style.display = 'none';
+    compressedBlob = null;
   };
 
   // ── Form submit — called from onclick in HTML
@@ -63,13 +150,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     try {
       let photoUrl = null;
-      const photoFile = document.getElementById('photo-input').files[0];
-      if (photoFile) {
-        const ext  = photoFile.name.split('.').pop();
-        const path = `${session.user.id}/${Date.now()}.${ext}`;
-        const { error: upErr } = await db.storage.from('item-photos').upload(path, photoFile);
+      if (compressedBlob) {
+        // Always store as .jpg regardless of original format
+        const storagePath = `${session.user.id}/${Date.now()}.jpg`;
+        const { error: upErr } = await db.storage
+          .from('item-photos')
+          .upload(storagePath, compressedBlob, { contentType: 'image/jpeg' });
         if (!upErr) {
-          const { data: urlData } = db.storage.from('item-photos').getPublicUrl(path);
+          const { data: urlData } = db.storage.from('item-photos').getPublicUrl(storagePath);
           photoUrl = urlData.publicUrl;
         }
       }

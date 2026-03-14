@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Volunteer Admin — GrowOn</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    /* ── Layout ── */
+    .admin-wrap     { max-width: 1100px; margin: 0 auto; padding: 28px 24px 60px; }
+    .admin-header   { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
+    .admin-header h1 { font-size: 26px; margin: 0; }
+    .volunteer-badge {
+      background: var(--sage);
+      color: white;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 999px;
+    }
+
+    /* ── Stats bar ── */
+    .admin-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 28px; }
+    .admin-stat  { background: white; border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px; }
+    .admin-stat .num { font-family: 'DM Serif Display', serif; font-size: 28px; line-height: 1; }
+    .admin-stat .lbl { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .admin-stat.highlight { background: var(--clay); border-color: transparent; }
+    .admin-stat.highlight .num { color: white; }
+    .admin-stat.highlight .lbl { color: rgba(255,255,255,0.75); }
+
+    /* ── Tabs ── */
+    .tab-bar { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 20px; gap: 0; }
+    .tab     {
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 500;
+      font-family: 'DM Sans', sans-serif;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted);
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: color 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tab:hover   { color: var(--ink); }
+    .tab.active  { color: var(--sage); border-bottom-color: var(--sage); }
+    .tab-count {
+      background: var(--clay);
+      color: white;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 999px;
+      min-width: 20px;
+      text-align: center;
+    }
+    .tab-count.zero { background: var(--warm); color: var(--muted); }
+
+    /* ── Queue list ── */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .queue-item {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      margin-bottom: 12px;
+      overflow: hidden;
+      transition: box-shadow 0.2s;
+    }
+    .queue-item:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+    .queue-item.approved  { border-left: 4px solid var(--sage); }
+    .queue-item.rejected  { border-left: 4px solid #e57373; opacity: 0.65; }
+
+    .qi-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 18px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .qi-emoji { font-size: 32px; flex-shrink: 0; }
+    .qi-info  { flex: 1; min-width: 0; }
+    .qi-title { font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .qi-meta  { font-size: 12px; color: var(--muted); margin-top: 3px; }
+    .qi-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+    .qi-expand  { font-size: 18px; color: var(--muted); transition: transform 0.2s; }
+    .queue-item.open .qi-expand { transform: rotate(180deg); }
+
+    /* ── Detail panel ── */
+    .qi-detail {
+      display: none;
+      border-top: 1px solid var(--border);
+      padding: 20px 18px;
+      background: var(--cream);
+    }
+    .queue-item.open .qi-detail { display: block; }
+
+    .detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 18px; }
+    .detail-field { }
+    .detail-field .df-label { font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+    .detail-field .df-value { font-size: 14px; color: var(--ink); }
+
+    .detail-photo {
+      width: 100%;
+      max-height: 260px;
+      object-fit: cover;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      margin-bottom: 18px;
+      display: block;
+    }
+    .no-photo {
+      background: var(--warm);
+      border-radius: var(--radius);
+      border: 1px dashed var(--border);
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 18px;
+    }
+
+    /* ── Action row ── */
+    .action-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+    .pts-override {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .pts-override label { font-size: 12px; font-weight: 500; color: var(--muted); }
+    .pts-input {
+      width: 90px;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--sage);
+      background: white;
+      text-align: center;
+    }
+    .pts-input:focus { outline: none; border-color: var(--sage); }
+
+    .notes-field {
+      flex: 1;
+      min-width: 180px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .notes-field label { font-size: 12px; font-weight: 500; color: var(--muted); }
+    .notes-input {
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      color: var(--ink);
+      background: white;
+      resize: none;
+      height: 38px;
+    }
+    .notes-input:focus { outline: none; border-color: var(--sage); }
+
+    .btn-approve {
+      background: var(--sage);
+      color: white;
+      border: none;
+      padding: 10px 22px;
+      border-radius: 999px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    .btn-approve:hover    { background: #3d6a4b; }
+    .btn-approve:disabled { opacity: 0.5; cursor: default; }
+
+    .btn-reject {
+      background: white;
+      color: #c62828;
+      border: 1px solid #ef9a9a;
+      padding: 10px 18px;
+      border-radius: 999px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    .btn-reject:hover { background: #fce4ec; }
+
+    /* ── Search / filter bar ── */
+    .queue-controls { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+    .search-input {
+      flex: 1;
+      min-width: 200px;
+      padding: 9px 14px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      background: white;
+    }
+    .search-input:focus { outline: none; border-color: var(--sage); }
+
+    /* ── Member list ── */
+    .member-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 18px;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      margin-bottom: 8px;
+    }
+    .member-avatar {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      background: var(--sage-light);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 600; color: var(--sage);
+      flex-shrink: 0;
+    }
+    .member-info { flex: 1; min-width: 0; }
+    .member-info strong { font-size: 14px; display: block; }
+    .member-info span   { font-size: 12px; color: var(--muted); }
+    .member-stats { display: flex; gap: 16px; font-size: 12px; text-align: right; flex-shrink: 0; }
+    .member-stat  { }
+    .member-stat .ms-num { font-weight: 600; font-size: 15px; color: var(--ink); }
+    .member-stat .ms-lbl { color: var(--muted); }
+    .volunteer-toggle {
+      background: var(--warm);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .volunteer-toggle.active { background: var(--sage-light); border-color: var(--sage); color: var(--sage); font-weight: 500; }
+
+    /* ── Empty state ── */
+    .empty { text-align: center; padding: 60px 24px; color: var(--muted); }
+    .empty .big { font-size: 40px; margin-bottom: 12px; }
+    .empty p    { font-size: 14px; }
+
+    .hidden { display: none; }
+
+    /* ── Confirm modal ── */
+    .confirm-modal-details {
+      background: var(--cream);
+      border-radius: var(--radius);
+      padding: 14px;
+      margin-bottom: 18px;
+      font-size: 14px;
+    }
+    .confirm-modal-details .row { display: flex; justify-content: space-between; padding: 4px 0; }
+    .confirm-modal-details .row span:first-child { color: var(--muted); }
+    .confirm-modal-details .row span:last-child  { font-weight: 500; }
+
+    /* ── Reject reason modal ── */
+    .reject-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+    .reject-option  {
+      padding: 11px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.15s;
+    }
+    .reject-option:hover    { border-color: #ef9a9a; background: #fce4ec; }
+    .reject-option.selected { border-color: #e57373; background: #fce4ec; color: #c62828; font-weight: 500; }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="index.html">Grow<span>On</span></a>
+  <div class="nav-links">
+    <span class="volunteer-badge">Volunteer</span>
+    <a class="nav-btn ghost" href="browse.html">Browse</a>
+    <a class="nav-btn ghost hidden" id="nav-account" href="dashboard.html">My Account</a>
+    <a class="nav-btn ghost hidden" id="nav-signout" href="#">Sign out</a>
+    <a class="nav-btn primary" id="nav-signin" href="login.html">Sign in</a>
+  </div>
+</nav>
+
+<div class="admin-wrap">
+
+  <!-- Header -->
+  <div class="admin-header">
+    <div>
+      <div class="section-label">Volunteer Panel</div>
+      <h1>Contributions</h1>
+    </div>
+    <button class="btn btn-sage" onclick="loadAll()">↻ Refresh</button>
+  </div>
+
+  <!-- Stats -->
+  <div class="admin-stats">
+    <div class="admin-stat highlight">
+      <div class="num" id="stat-pending">—</div>
+      <div class="lbl">Awaiting review</div>
+    </div>
+    <div class="admin-stat">
+      <div class="num" id="stat-approved-today">—</div>
+      <div class="lbl">Approved today</div>
+    </div>
+    <div class="admin-stat">
+      <div class="num" id="stat-available">—</div>
+      <div class="lbl">Live in catalogue</div>
+    </div>
+    <div class="admin-stat">
+      <div class="num" id="stat-claimed">—</div>
+      <div class="lbl">Claimed this week</div>
+    </div>
+    <div class="admin-stat">
+      <div class="num" id="stat-members">—</div>
+      <div class="lbl">Total members</div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tab-bar">
+    <button class="tab active" id="tab-pending"  onclick="switchTab('pending')">
+      Pending review <span class="tab-count" id="count-pending">0</span>
+    </button>
+    <button class="tab" id="tab-available" onclick="switchTab('available')">
+      Live catalogue <span class="tab-count zero" id="count-available">0</span>
+    </button>
+    <button class="tab" id="tab-claimed"   onclick="switchTab('claimed')">
+      Claimed <span class="tab-count zero" id="count-claimed">0</span>
+    </button>
+    <button class="tab" id="tab-rejected"  onclick="switchTab('rejected')">
+      Rejected <span class="tab-count zero" id="count-rejected">0</span>
+    </button>
+    <button class="tab" id="tab-members"   onclick="switchTab('members')">
+      Members <span class="tab-count zero" id="count-members">0</span>
+    </button>
+  </div>
+
+  <!-- Pending tab -->
+  <div class="tab-panel active" id="panel-pending">
+    <div class="queue-controls">
+      <input class="search-input" type="text" placeholder="Search by title, size, category…" id="search-pending" oninput="filterQueue('pending')">
+    </div>
+    <div id="list-pending"><div class="empty"><div class="big">⏳</div><p>Loading…</p></div></div>
+  </div>
+
+  <!-- Available tab -->
+  <div class="tab-panel" id="panel-available">
+    <div class="queue-controls">
+      <input class="search-input" type="text" placeholder="Search catalogue…" id="search-available" oninput="filterQueue('available')">
+    </div>
+    <div id="list-available"><div class="empty"><div class="big">⏳</div><p>Loading…</p></div></div>
+  </div>
+
+  <!-- Claimed tab -->
+  <div class="tab-panel" id="panel-claimed">
+    <div id="list-claimed"><div class="empty"><div class="big">⏳</div><p>Loading…</p></div></div>
+  </div>
+
+  <!-- Rejected tab -->
+  <div class="tab-panel" id="panel-rejected">
+    <div id="list-rejected"><div class="empty"><div class="big">⏳</div><p>Loading…</p></div></div>
+  </div>
+
+  <!-- Members tab -->
+  <div class="tab-panel" id="panel-members">
+    <div class="queue-controls">
+      <input class="search-input" type="text" placeholder="Search members…" id="search-members" oninput="filterMembers()">
+    </div>
+    <div id="list-members"><div class="empty"><div class="big">⏳</div><p>Loading…</p></div></div>
+  </div>
+
+</div>
+
+<!-- Approve confirm modal -->
+<div class="modal-overlay" id="approve-modal">
+  <div class="modal">
+    <h3 style="margin-bottom:6px">Approve item</h3>
+    <p style="font-size:14px;color:var(--muted);margin-bottom:16px">
+      This will make the item live in the catalogue and award points to the contributor.
+    </p>
+    <div class="confirm-modal-details" id="approve-details"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal('approve-modal')">Cancel</button>
+      <button class="modal-confirm" id="approve-confirm-btn" onclick="executeApprove()">Approve &amp; award points</button>
+    </div>
+  </div>
+</div>
+
+<!-- Reject reason modal -->
+<div class="modal-overlay" id="reject-modal">
+  <div class="modal">
+    <h3 style="margin-bottom:6px">Reject item</h3>
+    <p style="font-size:14px;color:var(--muted);margin-bottom:16px">
+      Select a reason. The contributor will not be awarded points for this item.
+    </p>
+    <div class="reject-options" id="reject-options">
+      <div class="reject-option" onclick="selectRejectReason(this, 'Not clean — please wash before resubmitting')">Not clean — please wash before resubmitting</div>
+      <div class="reject-option" onclick="selectRejectReason(this, 'Too worn or damaged for exchange')">Too worn or damaged for exchange</div>
+      <div class="reject-option" onclick="selectRejectReason(this, 'Item does not match description')">Item does not match description</div>
+      <div class="reject-option" onclick="selectRejectReason(this, 'Missing or broken fastening (zip, buttons, etc.)')">Missing or broken fastening (zip, buttons, etc.)</div>
+      <div class="reject-option" onclick="selectRejectReason(this, 'Size label missing or unreadable')">Size label missing or unreadable</div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal('reject-modal')">Cancel</button>
+      <button class="modal-confirm" id="reject-confirm-btn"
+              style="background:#e57373;"
+              onclick="executeReject()">Confirm rejection</button>
+    </div>
+  </div>
+</div>
+
+<!-- Point adjustment modal -->
+<div class="modal-overlay" id="adjust-modal">
+  <div class="modal">
+    <h3 style="margin-bottom:6px">Adjust member points</h3>
+    <p style="font-size:14px;color:var(--muted);margin-bottom:16px">
+      Manual adjustment — use sparingly. Adds a transaction record.
+    </p>
+    <div class="form-group">
+      <label class="form-group" for="adj-name">Member</label>
+      <input class="form-input" id="adj-name" readonly>
+    </div>
+    <div class="form-group">
+      <label for="adj-points">Points (use negative to deduct)</label>
+      <input class="form-input" type="number" id="adj-points" placeholder="e.g. 10 or -5">
+    </div>
+    <div class="form-group">
+      <label for="adj-note">Reason</label>
+      <input class="form-input" type="text" id="adj-note" placeholder="e.g. Referral bonus, hub volunteer shift">
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal('adjust-modal')">Cancel</button>
+      <button class="modal-confirm" onclick="executeAdjustment()">Apply adjustment</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/supabase-client.js" defer></script>
+<script src="js/ui.js" defer></script>
+<script src="js/page-admin.js" defer></script>
+</body>
+</html>

@@ -58,6 +58,19 @@ async function signOut() {
   return db.auth.signOut();
 }
 
+async function resetPasswordEmail(email) {
+  // Redirect to reset-password.html after the user clicks the email link.
+  // Supabase appends #access_token=... to this URL, same as confirm.html.
+  const resetUrl = window.location.origin
+    + window.location.pathname.replace(/\/[^/]*$/, '/')
+    + 'reset-password.html';
+  return db.auth.resetPasswordForEmail(email, { redirectTo: resetUrl });
+}
+
+async function updatePassword(newPassword) {
+  return db.auth.updateUser({ password: newPassword });
+}
+
 /* ── Items ── */
 
 async function fetchItems(filters = {}) {

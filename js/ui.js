@@ -75,19 +75,31 @@ async function requireAuth(redirectTo = 'login.html') {
 
 /* ── Render nav user state ── */
 async function initNav() {
-  const session = await getSession();
-  const signInBtn = document.getElementById('nav-signin');
+  const session    = await getSession();
+  const signInBtn  = document.getElementById('nav-signin');
   const accountBtn = document.getElementById('nav-account');
   const signOutBtn = document.getElementById('nav-signout');
+  const adminBtn   = document.getElementById('nav-admin');
 
   if (session) {
     signInBtn?.classList.add('hidden');
     accountBtn?.classList.remove('hidden');
     signOutBtn?.classList.remove('hidden');
+
+    // Show volunteer admin link only for volunteers
+    if (adminBtn) {
+      try {
+        const profile = await fetchProfile(session.user.id);
+        if (profile.is_volunteer) {
+          adminBtn.classList.remove('hidden');
+        }
+      } catch (_) {}
+    }
   } else {
     signInBtn?.classList.remove('hidden');
     accountBtn?.classList.add('hidden');
     signOutBtn?.classList.add('hidden');
+    adminBtn?.classList.add('hidden');
   }
 
   signOutBtn?.addEventListener('click', async () => {

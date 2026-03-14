@@ -160,6 +160,52 @@ async function addWishlistItem(entry) {
   return data;
 }
 
+/* ── Volunteer admin ── */
+
+async function fetchPendingItems() {
+  const { data, error } = await db
+    .from('items')
+    .select('*, profiles(display_name, suburb, points_balance)')
+    .eq('status', 'pending')
+    .order('created_at', { ascending: true }); // oldest first
+  if (error) throw error;
+  return data;
+}
+
+async function approveItem(itemId, pointCost, notes = null) {
+  const { error } = await db.rpc('approve_item', {
+    p_item_id:    itemId,
+    p_point_cost: pointCost,
+    p_notes:      notes,
+  });
+  if (error) throw error;
+}
+
+async function rejectItem(itemId, reason) {
+  const { error } = await db
+    .from('items')
+    .update({ status: 'rejected', volunteer_notes: reason, updated_at: new Date().toISOString() })
+    .eq('id', itemId);
+  if (error) throw error;
+}
+
+async function fetchAllMembers() {
+  const { data, error } = await db
+    .from('profiles')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+async function setVolunteerStatus(userId, isVolunteer) {
+  const { error } = await db
+    .from('profiles')
+    .update({ is_volunteer: isVolunteer })
+    .eq('id', userId);
+  if (error) throw error;
+}
+
 /* ── Points calculator (mirrors DB formula) ── */
 
 function calculatePoints(sizeBase, conditionMultiplier, materialBonus, isBranded) {

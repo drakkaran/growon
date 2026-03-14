@@ -43,6 +43,7 @@
   <a class="logo" href="index.html">Grow<span>On</span></a>
   <div class="nav-links">
     <a class="nav-btn ghost" href="browse.html">Browse</a>
+    <a class="nav-btn ghost hidden" id="nav-admin" href="admin.html">Volunteer Admin</a>
   </div>
 </nav>
 
@@ -52,8 +53,9 @@
 
   <div class="auth-card">
     <div class="tab-row">
-      <button class="tab-btn active" id="tab-signin" onclick="switchTab('signin')">Sign in</button>
-      <button class="tab-btn"        id="tab-signup" onclick="switchTab('signup')">Create account</button>
+      <button class="tab-btn active" id="tab-signin"  onclick="switchTab('signin')">Sign in</button>
+      <button class="tab-btn"        id="tab-signup"  onclick="switchTab('signup')">Create account</button>
+      <button class="tab-btn hidden" id="tab-forgot"  onclick="switchTab('forgot')">Reset password</button>
     </div>
 
     <!-- Sign in -->
@@ -68,7 +70,7 @@
       </div>
       <button class="btn btn-sage btn-full" id="si-btn" onclick="handleSignIn()" style="margin-top:8px">Sign in</button>
       <p style="text-align:center;font-size:13px;color:var(--muted);margin-top:14px">
-        <a href="#" style="color:var(--sage)">Forgot password?</a>
+        <a href="#" style="color:var(--sage)" onclick="event.preventDefault();switchTab('forgot')">Forgot password?</a>
       </p>
     </div>
 
@@ -100,6 +102,30 @@
       <p style="font-size:12px;color:var(--muted);text-align:center;margin-top:12px;line-height:1.5">
         By joining you agree to our community guidelines: only contribute clean, wearable items.
       </p>
+    </div>
+    <!-- Forgot password -->
+    <div class="form-panel" id="panel-forgot">
+      <div id="forgot-request">
+        <p style="font-size:14px;color:var(--muted);margin-bottom:18px;line-height:1.6">
+          Enter your email and we'll send you a link to reset your password.
+        </p>
+        <div class="form-group">
+          <label for="fp-email">Email address</label>
+          <input class="form-input" type="email" id="fp-email" placeholder="you@example.com" autocomplete="email">
+        </div>
+        <button class="btn btn-sage btn-full" id="fp-btn" onclick="handleForgot()" style="margin-top:8px">Send reset link</button>
+        <p style="text-align:center;font-size:13px;color:var(--muted);margin-top:14px">
+          <a href="#" style="color:var(--sage)" onclick="event.preventDefault();switchTab('signin')">Back to sign in</a>
+        </p>
+      </div>
+      <div id="forgot-sent" style="display:none;text-align:center;padding:16px 0">
+        <div style="font-size:40px;margin-bottom:16px">📬</div>
+        <h3 style="font-family:'DM Serif Display',serif;margin-bottom:8px">Check your inbox</h3>
+        <p style="font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:20px">
+          If that email is registered, you'll receive a reset link shortly. Check your spam folder if it doesn't arrive within a few minutes.
+        </p>
+        <a href="#" style="color:var(--sage);font-size:13px" onclick="event.preventDefault();switchTab('signin')">Back to sign in</a>
+      </div>
     </div>
   </div>
 </div>

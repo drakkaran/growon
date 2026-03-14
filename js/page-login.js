@@ -1,6 +1,9 @@
 /* GrowOn — login page */
 document.addEventListener('DOMContentLoaded', function () {
 
+  // Show volunteer admin link if already signed in as volunteer
+  initNav();
+
   // Redirect if already signed in
   getSession().then(s => { if (s) window.location.href = 'dashboard.html'; });
 

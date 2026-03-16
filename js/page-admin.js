@@ -5,13 +5,19 @@ document.addEventListener('DOMContentLoaded', async function () {
   const session = await requireAuth('login.html');
   if (!session) return;  // requireAuth already redirected
 
-  const profile = await fetchProfile(session.user.id);
+  let profile;
+  try {
+    profile = await fetchProfile(session.user.id);
+  } catch (err) {
+    document.body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;text-align:center;font-family:'DM Sans',sans-serif"><div><div style="font-size:48px;margin-bottom:16px">⚠️</div><h2 style="font-family:'DM Serif Display',serif;margin-bottom:8px">Could not load profile</h2><p style="color:#6b6b63;margin-bottom:24px">${err.message}</p><a href="index.html" style="background:#4a7c59;color:white;padding:11px 24px;border-radius:999px;text-decoration:none;font-size:14px">Back to home</a></div></div>`;
+    return;
+  }
+
   if (!profile.is_volunteer && !profile.is_admin) {
     window.location.replace('index.html');
     return;
   }
 
-  document.body.style.visibility = '';
   initNav();
   const isAdmin = !!profile.is_admin;
 

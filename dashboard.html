@@ -56,6 +56,37 @@
 
     .empty-activity { text-align: center; padding: 40px; color: var(--muted); font-size: 14px; }
 
+    .saved-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+    .saved-card {
+      background: white; border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden;
+      cursor: pointer; transition: transform 0.15s; position: relative;
+    }
+    .saved-card:hover { transform: translateY(-2px); }
+    .saved-card-img {
+      height: 90px; display: flex; align-items: center; justify-content: center; overflow: hidden;
+    }
+    .saved-card-img img { width: 100%; height: 100%; object-fit: cover; }
+    .saved-card-img .saved-emoji { font-size: 36px; }
+    .saved-card-info { padding: 7px 9px 9px; }
+    .saved-card-info p { font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
+    .saved-card-info span { font-size: 11px; color: var(--muted); }
+    .saved-card-remove {
+      position: absolute; top: 5px; right: 5px;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: rgba(255,255,255,0.92); border: none;
+      font-size: 14px; cursor: pointer; color: var(--muted);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    }
+    .saved-card-remove:hover { color: #e05c4a; }
+    .empty-saved { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
+
     .edit-profile-btn {
       margin-left: auto;
       padding: 7px 16px;
@@ -130,6 +161,10 @@
   <div class="activity-list" id="activity-list">
     <div class="empty-activity">Loading activity…</div>
   </div>
+
+  <!-- Saved items -->
+  <div class="section-heading">Saved items</div>
+  <div id="saved-items-section"></div>
 
   <!-- Wishlist -->
   <div class="section-heading">Wishlisted sizes</div>

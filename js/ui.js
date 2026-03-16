@@ -5,6 +5,9 @@
 /* ── Auth state (set by initNav, used by buildItemCard) ── */
 let _userIsLoggedIn = false;
 
+/* ── Saved item IDs (populated by page-browse before rendering) ── */
+let _savedItemIds = new Set();
+
 /* ── Toast notifications ── */
 function showToast(msg, duration = 3200) {
   let el = document.getElementById('toast');
@@ -125,8 +128,15 @@ function buildItemCard(item) {
   return `
     <div class="item-card" data-id="${item.id}" onclick="window.location='item.html?id=${item.id}'">
       <div class="item-img" style="background:${bgColor}">
-        <span class="item-emoji">${item.emoji || '👕'}</span>
+        ${item.photo_url
+          ? `<img src="${escHtml(item.photo_url)}" alt="${escHtml(item.title)}" loading="lazy">`
+          : `<span class="item-emoji">${item.emoji || '👕'}</span>`}
         ${conditionBadge(item.condition)}
+        ${_userIsLoggedIn
+          ? `<button class="save-btn${_savedItemIds.has(item.id) ? ' saved' : ''}"
+               title="${_savedItemIds.has(item.id) ? 'Remove from wishlist' : 'Save to wishlist'}"
+               onclick="toggleSave(${item.id}, this, event)">${_savedItemIds.has(item.id) ? '♥' : '♡'}</button>`
+          : ''}
       </div>
       <div class="item-info">
         <h4>${escHtml(item.title)}</h4>
@@ -143,6 +153,28 @@ function buildItemCard(item) {
       </div>
     </div>`;
 }
+
+/* ── Save / unsave item toggle (used on browse cards) ── */
+window.toggleSave = async function (itemId, btn, event) {
+  event.stopPropagation();
+  const saving = !_savedItemIds.has(itemId);
+  // Optimistic update
+  btn.textContent = saving ? '♥' : '♡';
+  btn.classList.toggle('saved', saving);
+  btn.title = saving ? 'Remove from wishlist' : 'Save to wishlist';
+  _savedItemIds[saving ? 'add' : 'delete'](itemId);
+  try {
+    if (saving) await saveItem(itemId);
+    else        await unsaveItem(itemId);
+  } catch (err) {
+    // Revert
+    btn.textContent = saving ? '♡' : '♥';
+    btn.classList.toggle('saved', !saving);
+    btn.title = saving ? 'Save to wishlist' : 'Remove from wishlist';
+    _savedItemIds[saving ? 'delete' : 'add'](itemId);
+    showToast('⚠ ' + err.message);
+  }
+};
 
 /* ── Escape HTML to prevent XSS ── */
 function escHtml(str) {

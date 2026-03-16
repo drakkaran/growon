@@ -52,16 +52,45 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('[data-filter="gender"]').forEach(b => b.classList.remove('active'));
     el.classList.add('active');
     currentFilters.gender = val;
+    updateResetBtn();
     loadItems();
   };
 
-  window.applyFilters = function () { loadItems(); };
+  function updateResetBtn() {
+    const active = currentFilters.gender !== 'all'
+      || document.getElementById('filter-size').value
+      || document.getElementById('filter-cat').value
+      || document.getElementById('filter-cond').value;
+    document.getElementById('filter-reset').style.display = active ? '' : 'none';
+  }
+
+  window.applyFilters = function () { updateResetBtn(); loadItems(); };
+
+  window.resetFilters = function () {
+    currentFilters.gender = 'all';
+    document.querySelectorAll('[data-filter="gender"]').forEach(b =>
+      b.classList.toggle('active', b.dataset.value === 'all')
+    );
+    document.getElementById('filter-size').value = '';
+    document.getElementById('filter-cat').value  = '';
+    document.getElementById('filter-cond').value = '';
+    updateResetBtn();
+    loadItems();
+  };
 
   // Make loadItems available globally so confirmClaim in ui.js can refresh the grid
   window.loadItems = loadItems;
 
-  // Wait for session check before rendering cards so the Claim button
-  // visibility is correct on first render.
-  initNav().then(() => loadItems());
+  // Wait for session + saved IDs before rendering cards
+  initNav().then(async () => {
+    if (_userIsLoggedIn) {
+      try {
+        const user = await getUser();
+        const saved = await fetchSavedItems(user.id);
+        _savedItemIds = new Set(saved.map(s => s.item_id));
+      } catch (_) {}
+    }
+    loadItems();
+  });
   loadUserBalance();
 });

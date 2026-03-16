@@ -173,6 +173,32 @@ async function addWishlistItem(entry) {
   return data;
 }
 
+/* ── Saved items (item-specific wishlist) ── */
+
+async function fetchSavedItems(userId) {
+  const { data, error } = await db
+    .from('saved_items')
+    .select('item_id, items(*)')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+async function saveItem(itemId) {
+  const user = await getUser();
+  if (!user) throw new Error('Must be signed in');
+  const { error } = await db.from('saved_items').insert({ user_id: user.id, item_id: itemId });
+  if (error) throw error;
+}
+
+async function unsaveItem(itemId) {
+  const user = await getUser();
+  if (!user) throw new Error('Must be signed in');
+  const { error } = await db.from('saved_items').delete().eq('user_id', user.id).eq('item_id', itemId);
+  if (error) throw error;
+}
+
 /* ── Volunteer admin ── */
 
 async function fetchPendingItems() {

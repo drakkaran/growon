@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
   let currentItem  = null;
   let userBalance  = 0;
+  let itemIsSaved  = false;
 
   const CATEGORY_BG = {
     'Outerwear':      '#e8f5e9',
@@ -40,8 +41,12 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     if (session) {
       try {
-        const profile = await fetchProfile(session.user.id);
+        const [profile, saved] = await Promise.all([
+          fetchProfile(session.user.id),
+          fetchSavedItems(session.user.id),
+        ]);
         userBalance = profile.points_balance || 0;
+        itemIsSaved = saved.some(s => s.item_id === itemId);
       } catch (_) {}
     }
 
@@ -101,6 +106,15 @@ document.addEventListener('DOMContentLoaded', async function () {
         document.getElementById('low-balance-note').classList.remove('hidden');
       }
       show('claim-active');
+
+      // Save button (only for logged-in users)
+      const saveBtn = document.getElementById('save-item-btn');
+      saveBtn.classList.remove('hidden');
+      if (itemIsSaved) {
+        saveBtn.classList.add('saved');
+        document.getElementById('save-item-icon').textContent  = '♥';
+        document.getElementById('save-item-label').textContent = 'Saved to wishlist';
+      }
     }
 
     // Reveal page
@@ -132,6 +146,29 @@ document.addEventListener('DOMContentLoaded', async function () {
     triggerClaim(currentItem.id, currentItem.point_cost, currentItem.title, currentItem.emoji || '👕');
     document.getElementById('modal-balance-before').textContent = `${userBalance} pts`;
     document.getElementById('modal-balance-after').textContent  = `${userBalance - currentItem.point_cost} pts`;
+  };
+
+  window.toggleSaveItem = async function () {
+    const btn   = document.getElementById('save-item-btn');
+    const icon  = document.getElementById('save-item-icon');
+    const label = document.getElementById('save-item-label');
+    const saving = !itemIsSaved;
+    // Optimistic update
+    itemIsSaved = saving;
+    btn.classList.toggle('saved', saving);
+    icon.textContent  = saving ? '♥' : '♡';
+    label.textContent = saving ? 'Saved to wishlist' : 'Save to wishlist';
+    try {
+      if (saving) await saveItem(currentItem.id);
+      else        await unsaveItem(currentItem.id);
+    } catch (err) {
+      // Revert
+      itemIsSaved = !saving;
+      btn.classList.toggle('saved', !saving);
+      icon.textContent  = saving ? '♡' : '♥';
+      label.textContent = saving ? 'Save to wishlist' : 'Saved to wishlist';
+      showToast('⚠ ' + err.message);
+    }
   };
 
   // Called by confirmClaim() in ui.js after a successful claim

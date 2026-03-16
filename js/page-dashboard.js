@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', function () {
     await loadProfile();
 
     // Load the rest in parallel once we have the user ID confirmed
-    await Promise.allSettled([loadActivity(), loadWishlist()]);
+    await Promise.allSettled([loadActivity(), loadSavedItems(), loadWishlist()]);
   }
 
   async function loadProfile() {
@@ -102,6 +102,51 @@ document.addEventListener('DOMContentLoaded', function () {
       list.innerHTML = '<div class="empty-activity">No activity yet. Contribute your first item to get started!</div>';
     }
   }
+
+  async function loadSavedItems() {
+    const section = document.getElementById('saved-items-section');
+    try {
+      const saved = await fetchSavedItems(currentUser.id);
+      if (!saved.length) {
+        section.innerHTML = '<p class="empty-saved">No saved items yet. Browse and tap ♡ to save items you\'re interested in.</p>';
+        return;
+      }
+      const bg = {
+        'Outerwear': '#e8f5e9', 'Tops': '#e3f2fd', 'Bottoms': '#fff3e0',
+        'Footwear': '#f3e5f5', 'Swimwear': '#e0f7fa', 'Sleepwear': '#fce4ec',
+        'School uniform': '#e8f5e9',
+      };
+      section.innerHTML = `<div class="saved-grid">${saved.map(({ item_id, items: item }) => {
+        if (!item) return '';
+        const bgColor = bg[item.category] || '#f5f5f5';
+        const imgHtml = item.photo_url
+          ? `<img src="${escHtml(item.photo_url)}" alt="${escHtml(item.title)}" loading="lazy">`
+          : `<span class="saved-emoji">${item.emoji || '👕'}</span>`;
+        return `
+          <div class="saved-card" onclick="window.location='item.html?id=${item.id}'">
+            <div class="saved-card-img" style="background:${bgColor}">${imgHtml}</div>
+            <div class="saved-card-info">
+              <p>${escHtml(item.title)}</p>
+              <span>Size ${escHtml(item.size_label || item.size_group)}</span>
+            </div>
+            <button class="saved-card-remove" title="Remove from wishlist"
+              onclick="event.stopPropagation(); removeSavedItem(${item_id})">♥</button>
+          </div>`;
+      }).join('')}</div>`;
+    } catch (err) {
+      console.warn('Could not load saved items:', err.message);
+      section.innerHTML = '<p class="empty-saved">Could not load saved items.</p>';
+    }
+  }
+
+  window.removeSavedItem = async function (itemId) {
+    try {
+      await unsaveItem(itemId);
+      loadSavedItems();
+    } catch (err) {
+      showToast('⚠ ' + err.message);
+    }
+  };
 
   async function loadWishlist() {
     const row = document.getElementById('wishlist-row');

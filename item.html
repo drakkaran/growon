@@ -90,6 +90,18 @@
       color: var(--clay);
       margin-top: 10px;
     }
+    .save-item-btn {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      width: 100%; margin-top: 10px;
+      padding: 9px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: white;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px; color: var(--muted);
+      cursor: pointer; transition: all 0.15s;
+    }
+    .save-item-btn:hover, .save-item-btn.saved { border-color: #e05c4a; color: #e05c4a; }
 
     /* ── Skeletons ── */
     .skel-photo  { width: 320px; aspect-ratio: 1; border-radius: var(--radius-lg); }
@@ -218,6 +230,11 @@
               <a href="contribute.html" style="color:var(--sage)">Contribute items</a> to earn more.
             </p>
           </div>
+
+          <!-- Save to wishlist (logged in only) -->
+          <button class="save-item-btn hidden" id="save-item-btn" onclick="toggleSaveItem()">
+            <span id="save-item-icon">♡</span> <span id="save-item-label">Save to wishlist</span>
+          </button>
 
           <!-- Not logged in -->
           <div id="claim-signin" class="hidden">

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Contribute an Item — GrowOn</title>
+  <title>Contribute an Item — Outgrown</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
     .contribute-wrap { max-width: 660px; margin: 0 auto; padding: 36px 24px 60px; }
@@ -42,8 +42,6 @@
     .points-preview .label { font-size: 14px; font-weight: 500; color: var(--sage); }
     .points-preview .note  { font-size: 12px; color: var(--muted); margin-top: 4px; }
 
-    .hub-info { background: var(--sage-light); border-radius: var(--radius); padding: 14px 16px; font-size: 13px; color: var(--sage); line-height: 1.6; }
-
     .photo-upload {
       display: block;
       border: 2px dashed var(--sage-mid);
@@ -80,13 +78,14 @@
 <body>
 
 <nav>
-  <a class="logo" href="index.html">Grow<span>On</span></a>
+  <a class="logo" href="index.html">Out<span>grown</span></a>
   <div class="nav-links">
     <a class="nav-btn ghost"  href="browse.html">Browse</a>
     <a class="nav-btn active" href="contribute.html">Contribute</a>
     <a class="nav-btn ghost hidden" id="nav-account" href="dashboard.html">My Account</a>
+    <a class="nav-btn ghost hidden" id="nav-admin" href="admin.html">Volunteer Admin</a>
     <a class="nav-btn ghost hidden" id="nav-signout" href="#">Sign out</a>
-    <a class="nav-btn primary" id="nav-signin" href="login.html">Join Free</a>
+    <a class="nav-btn primary" id="nav-signin" href="login.html">Sign in</a>
   </div>
 </nav>
 
@@ -225,10 +224,6 @@
     <div class="form-group">
       <label for="suburb">Your suburb</label>
       <input class="form-input" type="text" id="suburb" placeholder="e.g. New Farm, Paddington, West End">
-    </div>
-    <div class="hub-info">
-      📍 <strong>Current drop-off hub:</strong> New Farm Community Centre, 1003 Brunswick St, New Farm.<br>
-      Open <strong>Saturday 9am–12pm</strong>. Bring items clean, folded, and in a bag or box.
     </div>
   </div>
 

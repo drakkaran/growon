@@ -1,7 +1,8 @@
-/* GrowOn — dashboard page */
+/* Outgrown — dashboard page */
 document.addEventListener('DOMContentLoaded', function () {
 
-  let currentUser = null;
+  let currentUser    = null;
+  let currentProfile = null;
 
   async function init() {
     let session;
@@ -50,6 +51,8 @@ document.addEventListener('DOMContentLoaded', function () {
         `Member since ${new Date(currentUser.created_at).toLocaleDateString('en-AU', { month: 'long', year: 'numeric' })}` +
         (profile.suburb ? ` · ${profile.suburb}` : '');
 
+      currentProfile = profile;
+
       document.getElementById('stat-balance').textContent     = profile.points_balance   ?? 0;
       document.getElementById('stat-contributed').textContent = profile.items_contributed ?? 0;
       document.getElementById('stat-claimed').textContent     = profile.items_claimed     ?? 0;
@@ -58,6 +61,8 @@ document.addEventListener('DOMContentLoaded', function () {
         ? (profile.items_contributed / profile.items_claimed).toFixed(1)
         : (profile.items_contributed > 0 ? '∞' : '—');
       document.getElementById('stat-ratio').textContent = ratio;
+
+      document.getElementById('edit-profile-btn').style.display = '';
     } catch (err) {
       // Profile row missing or RLS blocking read — show zeros rather than staying on "Loading…"
       console.warn('Could not load profile row:', err.message);
@@ -114,6 +119,64 @@ document.addEventListener('DOMContentLoaded', function () {
       row.innerHTML = `<button class="add-wishlist-btn" onclick="promptWishlist()">+ Add size</button>`;
     }
   }
+
+  // ── Edit profile
+  window.openEditProfile = function () {
+    document.getElementById('edit-name').value   = currentProfile?.display_name || '';
+    document.getElementById('edit-suburb').value = currentProfile?.suburb || '';
+    openModal('edit-profile-modal');
+  };
+
+  window.saveProfile = async function () {
+    const btn    = document.getElementById('save-profile-btn');
+    const name   = document.getElementById('edit-name').value.trim();
+    const suburb = document.getElementById('edit-suburb').value.trim();
+    if (!name) { showToast('Please enter a display name'); return; }
+
+    setLoading(btn, true);
+    try {
+      await updateProfile(currentUser.id, { display_name: name, suburb: suburb || null });
+      currentProfile = { ...currentProfile, display_name: name, suburb };
+      closeModal('edit-profile-modal');
+      // Refresh header text
+      const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+      document.getElementById('dash-avatar').textContent = initials;
+      document.getElementById('dash-name').textContent   = `Welcome back, ${name}`;
+      const since = new Date(currentUser.created_at).toLocaleDateString('en-AU', { month: 'long', year: 'numeric' });
+      document.getElementById('dash-sub').textContent = `Member since ${since}` + (suburb ? ` · ${suburb}` : '');
+      showToast('Profile updated!');
+    } catch (err) {
+      showToast('⚠ ' + err.message);
+    } finally {
+      setLoading(btn, false);
+    }
+  };
+
+  // ── Change password
+  window.openChangePassword = function () {
+    document.getElementById('new-pw').value     = '';
+    document.getElementById('confirm-pw').value = '';
+    openModal('change-pw-modal');
+  };
+
+  window.savePassword = async function () {
+    const btn       = document.getElementById('save-pw-btn');
+    const newPw     = document.getElementById('new-pw').value;
+    const confirmPw = document.getElementById('confirm-pw').value;
+    if (newPw.length < 8)         { showToast('Password must be at least 8 characters'); return; }
+    if (newPw !== confirmPw)      { showToast('Passwords do not match'); return; }
+
+    setLoading(btn, true);
+    try {
+      await updatePassword(newPw);
+      closeModal('change-pw-modal');
+      showToast('Password updated!');
+    } catch (err) {
+      showToast('⚠ ' + err.message);
+    } finally {
+      setLoading(btn, false);
+    }
+  };
 
   // ── Functions called from onclick in HTML — must be on window
   window.removeWishlist = async function (id) {

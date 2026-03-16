@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Item — Outgrown</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .item-wrap { max-width: 760px; margin: 0 auto; padding: 28px 24px 72px; }
+
+    .back-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      color: var(--muted); font-size: 14px; text-decoration: none;
+      margin-bottom: 28px;
+    }
+    .back-link:hover { color: var(--sage); }
+
+    /* ── Two-column layout ── */
+    .item-layout { display: flex; gap: 36px; align-items: flex-start; }
+
+    .photo-col { flex-shrink: 0; width: 320px; position: sticky; top: 82px; }
+    .photo-box {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .photo-box img    { width: 100%; height: 100%; object-fit: contain; display: block; }
+    .photo-box .emoji-ph { font-size: 88px; line-height: 1; }
+
+    /* ── Detail column ── */
+    .detail-col { flex: 1; min-width: 0; }
+
+    .item-eyebrow {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 10px;
+    }
+    .item-title { font-size: clamp(20px, 3vw, 28px); margin-bottom: 6px; }
+    .item-contrib {
+      font-size: 13px; color: var(--muted);
+      margin-bottom: 24px;
+    }
+
+    .detail-grid {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    .detail-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 11px 16px;
+      font-size: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-row span:first-child { color: var(--muted); }
+    .detail-row span:last-child  { font-weight: 500; text-align: right; }
+
+    /* ── Claim area ── */
+    .claim-area {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+    }
+    .claim-price-row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .cost-badge {
+      font-family: 'DM Serif Display', serif;
+      font-size: 26px;
+      color: var(--clay);
+    }
+    .balance-note { font-size: 13px; color: var(--muted); }
+    .unavailable-note {
+      text-align: center;
+      padding: 14px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .low-balance-note {
+      text-align: center;
+      font-size: 13px;
+      color: var(--clay);
+      margin-top: 10px;
+    }
+
+    /* ── Skeletons ── */
+    .skel-photo  { width: 320px; aspect-ratio: 1; border-radius: var(--radius-lg); }
+    .skel-text   { height: 16px; border-radius: 4px; margin-bottom: 10px; }
+    .skel-title  { height: 28px; border-radius: 6px; margin-bottom: 14px; width: 75%; }
+    .skel-block  { height: 180px; border-radius: var(--radius); margin-bottom: 20px; }
+    .skel-btn    { height: 48px; border-radius: 999px; }
+
+    /* ── Error state ── */
+    .error-state {
+      text-align: center;
+      padding: 80px 24px;
+      color: var(--muted);
+    }
+    .error-state .big { font-size: 48px; margin-bottom: 16px; }
+
+    .hidden { display: none; }
+
+    /* ── Claim modal rows (same as browse) ── */
+    .claim-modal-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 14px; }
+    .claim-modal-row span:first-child { color: var(--muted); }
+    .claim-modal-total { border-top: 1px solid var(--border); padding-top: 14px; font-weight: 600; }
+    .item-preview-box { display: flex; gap: 14px; align-items: center; background: var(--cream); border-radius: var(--radius); padding: 14px; margin-bottom: 18px; }
+
+    @media (max-width: 640px) {
+      .item-layout  { flex-direction: column; }
+      .photo-col    { width: 100%; position: static; }
+      .skel-photo   { width: 100%; }
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+
+<nav>
+  <a class="logo" href="index.html">Out<span>grown</span></a>
+  <div class="nav-links">
+    <a class="nav-btn ghost" href="browse.html">Browse</a>
+    <a class="nav-btn ghost" href="contribute.html">Contribute</a>
+    <a class="nav-btn ghost hidden" id="nav-account" href="dashboard.html">My Account</a>
+    <a class="nav-btn ghost hidden" id="nav-admin" href="admin.html">Volunteer Admin</a>
+    <a class="nav-btn ghost hidden" id="nav-signout" href="#">Sign out</a>
+    <a class="nav-btn primary" id="nav-signin" href="login.html">Join Free</a>
+  </div>
+</nav>
+
+<div class="item-wrap">
+
+  <!-- Loading skeleton -->
+  <div id="item-loading">
+    <div class="skeleton skel-text" style="width:80px;margin-bottom:28px"></div>
+    <div class="item-layout">
+      <div class="photo-col"><div class="skeleton skel-photo"></div></div>
+      <div class="detail-col">
+        <div class="skeleton skel-text" style="width:100px"></div>
+        <div class="skeleton skel-title"></div>
+        <div class="skeleton skel-text" style="width:60%"></div>
+        <div class="skeleton skel-block"></div>
+        <div class="skeleton skel-btn"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error state -->
+  <div id="item-error" class="error-state hidden">
+    <div class="big">🔍</div>
+    <h2>Item not found</h2>
+    <p id="item-error-msg">This item doesn't exist or has been removed.</p>
+    <a href="browse.html" class="btn btn-sage" style="margin-top:24px">Back to browse</a>
+  </div>
+
+  <!-- Item content -->
+  <div id="item-content" class="hidden">
+    <a class="back-link" href="browse.html">← Back to browse</a>
+
+    <div class="item-layout">
+      <!-- Photo -->
+      <div class="photo-col">
+        <div class="photo-box" id="photo-box">
+          <img id="item-photo" src="" alt="" class="hidden">
+          <span class="emoji-ph hidden" id="item-emoji"></span>
+        </div>
+      </div>
+
+      <!-- Details -->
+      <div class="detail-col">
+        <div class="item-eyebrow">
+          <span id="item-condition-badge"></span>
+          <span class="points-chip" id="item-category-tag"></span>
+        </div>
+        <h1 class="item-title" id="item-title"></h1>
+        <div class="detail-grid">
+          <div class="detail-row">
+            <span>Gender</span><span id="d-gender"></span>
+          </div>
+          <div class="detail-row">
+            <span>Size</span><span id="d-size"></span>
+          </div>
+          <div class="detail-row" id="d-material-row">
+            <span>Material</span><span id="d-material"></span>
+          </div>
+          <div class="detail-row" id="d-brand-row">
+            <span>Brand</span><span id="d-brand"></span>
+          </div>
+          <div class="detail-row" id="d-season-row">
+            <span>Season</span><span id="d-season"></span>
+          </div>
+          <div class="detail-row">
+            <span>Listed</span><span id="d-listed"></span>
+          </div>
+        </div>
+
+        <!-- Claim area -->
+        <div class="claim-area">
+          <!-- Available + logged in -->
+          <div id="claim-active" class="hidden">
+            <div class="claim-price-row">
+              <span class="cost-badge" id="item-cost"></span>
+              <span class="balance-note" id="balance-note"></span>
+            </div>
+            <button class="btn btn-sage btn-full btn-lg" id="claim-btn" onclick="handleClaim()">
+              Claim this item
+            </button>
+            <p class="low-balance-note hidden" id="low-balance-note">
+              You don't have enough points to claim this item.
+              <a href="contribute.html" style="color:var(--sage)">Contribute items</a> to earn more.
+            </p>
+          </div>
+
+          <!-- Not logged in -->
+          <div id="claim-signin" class="hidden">
+            <div class="claim-price-row">
+              <span class="cost-badge" id="item-cost-anon"></span>
+            </div>
+            <a href="login.html" class="btn btn-sage btn-full btn-lg">Sign in to claim</a>
+            <p style="text-align:center;font-size:13px;color:var(--muted);margin-top:10px">
+              New? <a href="login.html" style="color:var(--sage)">Join free</a> — it only takes a minute.
+            </p>
+          </div>
+
+          <!-- Item not available -->
+          <div id="claim-unavailable" class="hidden">
+            <p class="unavailable-note" id="unavailable-msg"></p>
+            <a href="browse.html" class="btn btn-outline btn-full" style="margin-top:4px">Browse more items</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Claim modal (identical to browse.html) -->
+<div class="modal-overlay" id="claim-modal">
+  <div class="modal">
+    <h3 style="margin-bottom:6px">Claim this item</h3>
+    <p style="color:var(--muted);font-size:14px;margin-bottom:18px">Points will be deducted from your balance and the item reserved for you.</p>
+    <div class="item-preview-box">
+      <span id="modal-emoji" style="font-size:38px"></span>
+      <div>
+        <strong id="modal-title"></strong>
+        <div style="font-size:13px;color:var(--muted);margin-top:2px" id="modal-meta"></div>
+      </div>
+    </div>
+    <div class="claim-modal-row"><span>Your balance</span><span id="modal-balance-before">— pts</span></div>
+    <div class="claim-modal-row"><span>Item cost</span><span id="modal-pts" style="color:var(--clay);font-weight:600"></span></div>
+    <div class="claim-modal-row claim-modal-total"><span>Balance after claim</span><span id="modal-balance-after"></span></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal('claim-modal')">Cancel</button>
+      <button class="modal-confirm" onclick="confirmClaim()">Confirm claim</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/supabase-client.js" defer></script>
+<script src="js/ui.js" defer></script>
+<script src="js/page-item.js" defer></script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-/* GrowOn — index page */
+/* Outgrown — index page */
 document.addEventListener('DOMContentLoaded', function () {
 
   initNav();

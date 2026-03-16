@@ -1,4 +1,4 @@
-/* GrowOn — login page */
+/* Outgrown — login page */
 document.addEventListener('DOMContentLoaded', function () {
 
   // Show volunteer admin link if already signed in as volunteer

@@ -1,5 +1,5 @@
 /**
- * GrowOn — Supabase Configuration
+ * Outgrown — Supabase Configuration
  *
  * Replace SUPABASE_URL and SUPABASE_ANON with your project values.
  * Find them at: https://app.supabase.com → Project Settings → API
@@ -17,7 +17,7 @@ const SUPABASE_ANON = 'sb_publishable_GS7cNvoOdQQAar1Kz5pkkQ_8EQthPNq';
 // Guard: fail with a clear message if the CDN bundle didn't load
 if (typeof supabase === 'undefined') {
   throw new Error(
-    '[GrowOn] Supabase CDN script not loaded. ' +
+    '[Outgrown] Supabase CDN script not loaded. ' +
     'Make sure the supabase-js <script> tag appears in <head> before supabase-client.js.'
   );
 }
@@ -75,7 +75,7 @@ async function updatePassword(newPassword) {
 
 async function fetchItems(filters = {}) {
   let q = db.from('items')
-    .select('*, profiles(display_name, suburb)')
+    .select('*')
     .eq('status', 'available')
     .order('created_at', { ascending: false });
 
@@ -211,11 +211,19 @@ async function fetchAllMembers() {
   return data;
 }
 
-async function setVolunteerStatus(userId, isVolunteer) {
+async function updateProfile(userId, fields) {
   const { error } = await db
     .from('profiles')
-    .update({ is_volunteer: isVolunteer })
+    .update(fields)
     .eq('id', userId);
+  if (error) throw error;
+}
+
+async function setVolunteerStatus(userId, isVolunteer) {
+  const { error } = await db.rpc('set_volunteer_status', {
+    p_user_id: userId,
+    p_status:  isVolunteer,
+  });
   if (error) throw error;
 }
 

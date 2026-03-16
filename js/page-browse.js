@@ -1,10 +1,8 @@
-/* GrowOn — browse page */
+/* Outgrown — browse page */
 document.addEventListener('DOMContentLoaded', function () {
 
   let currentFilters = { gender: 'all' };
   let userBalance = 0;
-
-  initNav();
 
   async function loadUserBalance() {
     const user = await getUser();
@@ -62,6 +60,8 @@ document.addEventListener('DOMContentLoaded', function () {
   // Make loadItems available globally so confirmClaim in ui.js can refresh the grid
   window.loadItems = loadItems;
 
+  // Wait for session check before rendering cards so the Claim button
+  // visibility is correct on first render.
+  initNav().then(() => loadItems());
   loadUserBalance();
-  loadItems();
 });

@@ -1,25 +1,19 @@
-/* GrowOn — volunteer admin page */
+/* Outgrown — volunteer admin page */
 document.addEventListener('DOMContentLoaded', async function () {
 
-  /* ── Auth guard: must be a signed-in volunteer ── */
+  /* ── Auth guard: must be a signed-in volunteer or admin ── */
   const session = await requireAuth('login.html');
-  if (!session) return;
+  if (!session) return;  // requireAuth already redirected
 
   const profile = await fetchProfile(session.user.id);
-  if (!profile.is_volunteer) {
-    document.body.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;text-align:center;font-family:'DM Sans',sans-serif;">
-        <div>
-          <div style="font-size:48px;margin-bottom:16px">🔒</div>
-          <h2 style="font-family:'DM Serif Display',serif;margin-bottom:8px">Access restricted</h2>
-          <p style="color:#6b6b63;margin-bottom:24px">This page is for GrowOn volunteers only.</p>
-          <a href="index.html" style="background:#4a7c59;color:white;padding:11px 24px;border-radius:999px;text-decoration:none;font-size:14px">Back to home</a>
-        </div>
-      </div>`;
+  if (!profile.is_volunteer && !profile.is_admin) {
+    window.location.replace('index.html');
     return;
   }
 
+  document.body.style.visibility = '';
   initNav();
+  const isAdmin = !!profile.is_admin;
 
   /* ── State ── */
   let allItems   = {};   // keyed by status: pending, available, claimed, rejected
@@ -116,7 +110,10 @@ document.addEventListener('DOMContentLoaded', async function () {
   }
 
   /* ── Render item queue ── */
+  function hideZoom() { document.getElementById('photo-zoom')?.classList.remove('visible'); }
+
   function renderQueue(status, items) {
+    hideZoom();
     const container = document.getElementById('list-' + status);
     if (!items.length) {
       const msgs = {
@@ -336,6 +333,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
   /* ── Members tab ── */
   function renderMembers(members) {
+    hideZoom();
     const container = document.getElementById('list-members');
     if (!members.length) {
       container.innerHTML = '<div class="empty"><div class="big">👥</div><p>No members yet.</p></div>';
@@ -371,11 +369,9 @@ document.addEventListener('DOMContentLoaded', async function () {
               <div class="ms-lbl">ratio</div>
             </div>
           </div>
-          <button
-            class="volunteer-toggle ${m.is_volunteer ? 'active' : ''}"
-            onclick="toggleVolunteer('${m.id}', ${m.is_volunteer})">
-            ${m.is_volunteer ? '★ Volunteer' : 'Make volunteer'}
-          </button>
+          ${isAdmin
+            ? `<button class="volunteer-toggle ${m.is_volunteer ? 'active' : ''}" onclick="toggleVolunteer('${m.id}', ${m.is_volunteer})">${m.is_volunteer ? '★ Volunteer' : 'Make volunteer'}</button>`
+            : m.is_volunteer ? '<span class="volunteer-toggle active" style="cursor:default">★ Volunteer</span>' : ''}
           <button
             class="volunteer-toggle"
             style="margin-left:4px"
@@ -400,10 +396,10 @@ document.addEventListener('DOMContentLoaded', async function () {
   /* ── Toggle volunteer status ── */
   window.toggleVolunteer = async function (userId, currentlyVolunteer) {
     try {
-      const { error } = await db
-        .from('profiles')
-        .update({ is_volunteer: !currentlyVolunteer })
-        .eq('id', userId);
+      const { error } = await db.rpc('set_volunteer_status', {
+        p_user_id: userId,
+        p_status:  !currentlyVolunteer,
+      });
       if (error) throw error;
       showToast(currentlyVolunteer ? 'Volunteer status removed' : '★ Volunteer status granted');
       await loadMembers();
@@ -458,6 +454,21 @@ document.addEventListener('DOMContentLoaded', async function () {
       setLoading(btn, false);
     }
   };
+
+  /* ── Photo zoom on hover ── */
+  const zoomOverlay = document.getElementById('photo-zoom');
+  const zoomImg     = document.getElementById('photo-zoom-img');
+  zoomOverlay.addEventListener('click', () => zoomOverlay.classList.remove('visible'));
+  document.addEventListener('mouseover', e => {
+    const img = e.target.closest('.detail-photo');
+    if (!img) return;
+    zoomImg.src = img.src;
+    zoomImg.alt = img.alt;
+    zoomOverlay.classList.add('visible');
+  });
+  document.addEventListener('mouseout', e => {
+    if (e.target.closest('.detail-photo')) zoomOverlay.classList.remove('visible');
+  });
 
   /* ── Make loadAll available to the refresh button ── */
   window.loadAll = loadAll;

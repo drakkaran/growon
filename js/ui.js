@@ -1,6 +1,9 @@
 /**
- * GrowOn — Shared UI Utilities
+ * Outgrown — Shared UI Utilities
  */
+
+/* ── Auth state (set by initNav, used by buildItemCard) ── */
+let _userIsLoggedIn = false;
 
 /* ── Toast notifications ── */
 function showToast(msg, duration = 3200) {
@@ -82,6 +85,7 @@ async function initNav() {
   const adminBtn   = document.getElementById('nav-admin');
 
   if (session) {
+    _userIsLoggedIn = true;
     signInBtn?.classList.add('hidden');
     accountBtn?.classList.remove('hidden');
     signOutBtn?.classList.remove('hidden');
@@ -90,7 +94,7 @@ async function initNav() {
     if (adminBtn) {
       try {
         const profile = await fetchProfile(session.user.id);
-        if (profile.is_volunteer) {
+        if (profile.is_volunteer || profile.is_admin) {
           adminBtn.classList.remove('hidden');
         }
       } catch (_) {}
@@ -129,10 +133,12 @@ function buildItemCard(item) {
         <div class="item-meta">${escHtml(item.gender)} · Size ${escHtml(item.size_label)} · ${escHtml(item.suburb || '')}</div>
         <div class="item-points">
           <span class="points-chip">${item.point_cost} pts</span>
-          <button class="btn btn-sm btn-sage claim-btn"
-            onclick="event.stopPropagation(); triggerClaim(${item.id}, ${item.point_cost}, '${escHtml(item.title)}', '${item.emoji || '👕'}')">
-            Claim
-          </button>
+          ${_userIsLoggedIn
+            ? `<button class="btn btn-sm btn-sage claim-btn"
+                onclick="event.stopPropagation(); triggerClaim(${item.id}, ${item.point_cost}, '${escHtml(item.title)}', '${item.emoji || '👕'}')">
+                Claim
+               </button>`
+            : ''}
         </div>
       </div>
     </div>`;

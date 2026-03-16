@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Account — GrowOn</title>
+  <title>My Account — Outgrown</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
     .dash-wrap { max-width: 820px; margin: 0 auto; padding: 36px 24px 60px; }
@@ -56,6 +56,37 @@
 
     .empty-activity { text-align: center; padding: 40px; color: var(--muted); font-size: 14px; }
 
+    .edit-profile-btn {
+      margin-left: auto;
+      padding: 7px 16px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: white;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      color: var(--muted);
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+    .edit-profile-btn:hover { border-color: var(--sage); color: var(--sage); }
+
+    .change-pw-link {
+      display: block;
+      text-align: center;
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 16px;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      background: none;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      width: 100%;
+    }
+    .change-pw-link:hover { color: var(--sage); }
+
     .hidden { display: none; }
   </style>
   <!-- Supabase must load before any app scripts -->
@@ -64,11 +95,12 @@
 <body>
 
 <nav>
-  <a class="logo" href="index.html">Grow<span>On</span></a>
+  <a class="logo" href="index.html">Out<span>grown</span></a>
   <div class="nav-links">
     <a class="nav-btn ghost" href="browse.html">Browse</a>
     <a class="nav-btn ghost" href="contribute.html">Contribute</a>
     <a class="nav-btn active hidden" id="nav-account" href="dashboard.html">My Account</a>
+    <a class="nav-btn ghost hidden" id="nav-admin" href="admin.html">Volunteer Admin</a>
     <a class="nav-btn ghost hidden" id="nav-signout" href="#">Sign out</a>
     <a class="nav-btn primary" id="nav-signin" href="login.html">Join Free</a>
   </div>
@@ -82,6 +114,7 @@
       <h2 id="dash-name">Loading…</h2>
       <div class="sub" id="dash-sub"></div>
     </div>
+    <button class="edit-profile-btn" id="edit-profile-btn" onclick="openEditProfile()" style="display:none">Edit profile</button>
   </div>
 
   <!-- Stats -->
@@ -105,6 +138,7 @@
   </div>
 
   <a class="btn btn-sage btn-full btn-lg" href="contribute.html">Contribute more items →</a>
+  <button class="change-pw-link" onclick="openChangePassword()">Change password</button>
 </div>
 
 <!-- Add wishlist modal -->
@@ -144,6 +178,45 @@
     <div class="modal-actions">
       <button class="modal-cancel" onclick="closeModal('wishlist-modal')">Cancel</button>
       <button class="modal-confirm" onclick="saveWishlist()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit profile modal -->
+<div class="modal-overlay" id="edit-profile-modal">
+  <div class="modal">
+    <h3 style="margin-bottom:18px">Edit profile</h3>
+    <div class="form-group">
+      <label for="edit-name">Display name</label>
+      <input class="form-input" type="text" id="edit-name" placeholder="Your name" maxlength="60">
+    </div>
+    <div class="form-group">
+      <label for="edit-suburb">Suburb</label>
+      <input class="form-input" type="text" id="edit-suburb" placeholder="e.g. New Farm, West End" maxlength="60">
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal('edit-profile-modal')">Cancel</button>
+      <button class="modal-confirm" id="save-profile-btn" onclick="saveProfile()">Save changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Change password modal -->
+<div class="modal-overlay" id="change-pw-modal">
+  <div class="modal">
+    <h3 style="margin-bottom:6px">Change password</h3>
+    <p style="color:var(--muted);font-size:14px;margin-bottom:18px">Choose a new password for your account.</p>
+    <div class="form-group">
+      <label for="new-pw">New password</label>
+      <input class="form-input" type="password" id="new-pw" placeholder="Min 8 characters" autocomplete="new-password">
+    </div>
+    <div class="form-group">
+      <label for="confirm-pw">Confirm password</label>
+      <input class="form-input" type="password" id="confirm-pw" placeholder="Repeat new password" autocomplete="new-password">
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal('change-pw-modal')">Cancel</button>
+      <button class="modal-confirm" id="save-pw-btn" onclick="savePassword()">Update password</button>
     </div>
   </div>
 </div>

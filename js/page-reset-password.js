@@ -1,4 +1,4 @@
-/* GrowOn — reset password page */
+/* Outgrown — reset password page */
 document.addEventListener('DOMContentLoaded', async function () {
 
   function show(stateId) {

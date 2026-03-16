@@ -1,4 +1,4 @@
-/* GrowOn — contribute page */
+/* Outgrown — contribute page */
 document.addEventListener('DOMContentLoaded', function () {
 
   let selectedCondition = 'excellent';
@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function () {
   // ── Image compression using canvas ─────────────────────────────────────────
   // Resizes to max 1200px on the longest edge, then steps JPEG quality down
   // until the blob fits under TARGET_BYTES. Always outputs JPEG.
-  const TARGET_BYTES = 900 * 1024; // 900 KB — comfortable margin under 1 MB
+  const TARGET_BYTES = 200 * 1024; // 200 KB — comfortable margin under 1 MB
   const MAX_DIMENSION = 1200;
 
   async function compressImage(file) {
